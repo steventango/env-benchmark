@@ -14,12 +14,12 @@ def main():
     csvs = Path("results").rglob("*.csv.gz")
     df = load_df(csvs, env_mapping)
 
-    df_agg = df.groupby(["env", "seed"]).agg({"wall_time": "max", "memory": "max"}).reset_index()
-    df_agg["sps"] = df["step"].max() / df_agg["wall_time"]
+    df_agg = df.groupby(["env", "seed"]).agg({"step": "max", "wall_time": "max", "memory": "max"}).reset_index()
+    df_agg["sps"] = df_agg["step"] / df_agg["wall_time"]
     df_agg = df_agg.groupby("env").agg({"sps": "mean", "memory": "mean"}).reset_index()
     print(df_agg)
 
-    plot_fps(df_agg)
+    plot_sps(df_agg)
     plot_memory(df)
 
 
@@ -31,7 +31,6 @@ def load_df(csvs: Iterable[Path], env_mapping: dict):
         df["env"] = df["env"].map(env_mapping)
         df["memory"] = df.groupby("seed")["memory"].transform(lambda x: x - x.min())
         df["memory"] /= 1e9
-        df = df[df["step"] % 1000 == 0]
         dfs.append(df)
     df = pd.concat(dfs)
     return df
@@ -62,7 +61,7 @@ def plot_memory(df: pd.DataFrame):
     plt.savefig("results/benchmark_memory.jpg")
 
 
-def plot_fps(df_agg: pd.DataFrame):
+def plot_sps(df_agg: pd.DataFrame):
     plt.figure()
     sns.barplot(data=df_agg, x="env", y="sps", hue="env", capsize=0.2)
     sns.despine()
