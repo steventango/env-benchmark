@@ -44,19 +44,18 @@ def main():
                 mem = psutil.virtual_memory()
                 memory[seed, index] = mem.used
                 wall_time[seed, index] = total_time
-
-        df = pd.DataFrame(
-            {
-                "wall_time": wall_time.flatten(),
-                "memory": memory.flatten(),
-                "seed": np.repeat(np.arange(args.seeds), length),
-                "step": np.tile(np.arange(0, args.timesteps, args.subsample), args.seeds),
-            }
-        )
-        df.to_csv(results_dir / f"{args.env}.csv.gz", index=False)
-        del df
         gc.collect()
-        time.sleep(10)
+        time.sleep(60)
+
+    df = pd.DataFrame(
+        {
+            "wall_time": wall_time.flatten(),
+            "memory": memory.flatten(),
+            "seed": np.repeat(np.arange(args.seeds), length),
+            "step": np.tile(np.arange(0, args.timesteps, args.subsample), args.seeds),
+        }
+    )
+    df.to_csv(results_dir / f"{args.env}.csv.gz", index=False)
 
 
 if __name__ == "__main__":
