@@ -14,8 +14,10 @@ def main():
     csvs = Path("results").rglob("*.csv.gz")
     df = load_df(csvs, env_mapping)
 
-    df_agg = df.groupby(["env", "seed"]).agg({"wall_time": "max"}).sort_values("wall_time")
-    df_agg["fps"] = df["step"].max() / df_agg["wall_time"]
+    df_agg = df.groupby(["env", "seed"]).agg({"wall_time": "max", "memory": "max"}).reset_index()
+    df_agg["sps"] = df["step"].max() / df_agg["wall_time"]
+    df_agg = df_agg.groupby("env").agg({"sps": "mean", "memory": "mean"}).reset_index()
+    print(df_agg)
 
     plot_fps(df_agg)
     plot_memory(df)
@@ -62,11 +64,12 @@ def plot_memory(df: pd.DataFrame):
 
 def plot_fps(df_agg: pd.DataFrame):
     plt.figure()
-    sns.barplot(data=df_agg, x="env", y="fps", hue="env", capsize=0.2)
+    sns.barplot(data=df_agg, x="env", y="sps", hue="env", capsize=0.2)
     sns.despine()
-    plt.ylabel("Frames per second")
+    plt.ylabel("Steps per second")
     plt.xlabel("Environment")
     plt.tight_layout()
+    plt.savefig("results/benchmark_steps.pdf")
     plt.savefig("results/benchmark_steps.jpg")
 
 
