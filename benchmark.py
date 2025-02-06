@@ -16,13 +16,16 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--env", type=str, default="jbw")
     parser.add_argument("--timesteps", type=int, default=10_000_000)
+    parser.add_argument("--subsample", type=int, default=10_000)
     parser.add_argument("--seeds", type=int, default=2)
     args = parser.parse_args()
     results_dir = Path("results")
     results_dir.mkdir(exist_ok=True)
 
-    wall_time = np.random.randn(args.seeds, args.timesteps)
-    memory = np.random.randn(args.seeds, args.timesteps)
+    args.timesteps += 1
+    length = args.timesteps // args.subsample
+    wall_time = np.random.randn(args.seeds, length)
+    memory = np.random.randn(args.seeds, length)
 
     gc.collect()
     time.sleep(10)
@@ -35,17 +38,19 @@ def main():
             start = datetime.now()
             env.step(0)
             end = datetime.now()
-            mem = psutil.virtual_memory()
-            memory[seed, step] = mem.used
             total_time += (end - start).total_seconds()
-            wall_time[seed, step] = total_time
+            if step % args.subsample == 0:
+                index = step // args.subsample
+                mem = psutil.virtual_memory()
+                memory[seed, index] = mem.used
+                wall_time[seed, index] = total_time
 
         df = pd.DataFrame(
             {
                 "wall_time": wall_time.flatten(),
                 "memory": memory.flatten(),
-                "seed": np.repeat(np.arange(args.seeds), args.timesteps),
-                "step": np.tile(np.arange(args.timesteps), args.seeds),
+                "seed": np.repeat(np.arange(args.seeds), length),
+                "step": np.tile(np.arange(0, args.timesteps, args.subsample), args.seeds),
             }
         )
         df.to_csv(results_dir / f"{args.env}.csv.gz", index=False)
