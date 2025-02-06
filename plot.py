@@ -57,6 +57,7 @@ def plot_memory(df: pd.DataFrame):
     plt.legend(title=None)
     plt.tight_layout()
     plt.savefig("results/benchmark_memory.pdf")
+    plt.savefig("results/benchmark_memory.jpg")
 
 
 def plot_fps(df_agg: pd.DataFrame):
@@ -66,7 +67,7 @@ def plot_fps(df_agg: pd.DataFrame):
     plt.ylabel("Frames per second")
     plt.xlabel("Environment")
     plt.tight_layout()
-    plt.savefig("results/benchmark_fps.pdf")
+    plt.savefig("results/benchmark_steps.jpg")
 
 
 if __name__ == "__main__":
