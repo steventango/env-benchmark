@@ -15,14 +15,13 @@ from envs import get_env
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--env", type=str, default="jbw")
-    parser.add_argument("--timesteps", type=int, default=10_000_000)
+    parser.add_argument("--timesteps", type=int, default=10_000_001)
     parser.add_argument("--subsample", type=int, default=10_000)
     parser.add_argument("--seeds", type=int, default=2)
     args = parser.parse_args()
     results_dir = Path("results")
     results_dir.mkdir(exist_ok=True)
 
-    args.timesteps += 1
     length = args.timesteps // args.subsample
     wall_time = np.random.randn(args.seeds, length)
     memory = np.random.randn(args.seeds, length)
