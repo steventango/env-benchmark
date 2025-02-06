@@ -2,6 +2,7 @@ import argparse
 import gc
 import time
 from datetime import datetime
+from math import ceil
 from pathlib import Path
 
 import numpy as np
@@ -22,7 +23,7 @@ def main():
     results_dir = Path("results")
     results_dir.mkdir(exist_ok=True)
 
-    length = args.timesteps // args.subsample
+    length = ceil(args.timesteps / args.subsample)
     wall_time = np.random.randn(args.seeds, length)
     memory = np.random.randn(args.seeds, length)
 
