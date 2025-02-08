@@ -2,7 +2,7 @@ from forager.Env import ForagerEnv, ForagerConfig
 from forager.objects import Wall, Flower, Thorns
 
 config = ForagerConfig(
-    size=1_000, # equivalently: (1_000, 1_000)
+    size=1_000_000, # equivalently: (1_000, 1_000)
 
     # tell the env what types of objects you expect to see
     object_types={
@@ -18,7 +18,7 @@ config = ForagerConfig(
     # controls how far the agent can see around itself
     # should always be odd---this way the agent is centered
     # need not be square
-    aperture=(7, 5),
+    aperture=(11, 11),
 )
 
 
