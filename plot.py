@@ -29,7 +29,6 @@ def load_df(csvs: Iterable[Path], env_mapping: dict):
         df = pd.read_csv(csv)
         df["env"] = csv.stem.split(".")[0]
         df["env"] = df["env"].map(env_mapping)
-        df["memory"] = df.groupby("seed")["memory"].transform(lambda x: x - x.min())
         df["memory"] /= 1e9
         dfs.append(df)
     df = pd.concat(dfs)
@@ -52,7 +51,7 @@ def plot_memory(df: pd.DataFrame):
         errorbar=None,
     )
     sns.despine()
-    plt.xlabel("Timesteps")
+    plt.xlabel("Timestep")
     plt.ylabel("Memory (GB)")
     plt.gca().xaxis.set_major_locator(plt.MaxNLocator(6))
     plt.legend(title=None)
