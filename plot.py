@@ -27,7 +27,7 @@ def load_df(csvs: Iterable[Path], env_mapping: dict):
     dfs = []
     for csv in csvs:
         df = pd.read_csv(csv)
-        df["env"] = csv.stem.removesuffix(".csv")
+        df["env"] = csv.stem.split(".")[0]
         df["env"] = df["env"].map(env_mapping)
         df["memory"] = df.groupby("seed")["memory"].transform(lambda x: x - x.min())
         df["memory"] /= 1e9
