@@ -1,4 +1,4 @@
-from math import pi
+from math import log, pi
 
 import jbw
 
