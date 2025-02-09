@@ -2,7 +2,7 @@ from forager.Env import ForagerEnv, ForagerConfig
 from forager.objects import Wall, Flower, Thorns
 
 config = ForagerConfig(
-    size=1_000_000, # equivalently: (1_000, 1_000)
+    size=1_000, # equivalently: (1_000, 1_000)
 
     # tell the env what types of objects you expect to see
     object_types={
@@ -32,4 +32,6 @@ class Env:
     def reset(self, seed):
         config.seed = seed
         self.env = ForagerEnv(config)
+        self.env.generate_objects(0.1, 'flower')
+        self.env.generate_objects(0.1, 'thorns')
         return self.env.start()
