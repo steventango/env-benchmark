@@ -31,12 +31,19 @@ def main():
     mem_initial = psutil.virtual_memory().used
     start = datetime.now()
     env = get_env(args.env)()
-    env.reset(seed=args.seed)
+    import matplotlib.pyplot as plt
+    obs = env.reset(seed=args.seed)
+    obs = obs.astype(np.float32)
+    print(obs.shape)
+    plt.imshow(obs)
+    plt.savefig(f"results/{args.env}.png")
+    np.save(f"results/{args.env}.npy", obs)
     end = datetime.now()
     mem = psutil.virtual_memory()
     memory[0] = mem.used
     total_time += (end - start).total_seconds()
     wall_time[0] = total_time
+    exit()
     for step in tqdm(range(1, args.timesteps + 1)):
         start = datetime.now()
         env.step(0)

@@ -18,7 +18,7 @@ config = ForagerConfig(
     # controls how far the agent can see around itself
     # should always be odd---this way the agent is centered
     # need not be square
-    aperture=(11, 11),
+    aperture=(65, 65),
 )
 
 

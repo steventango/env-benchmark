@@ -1,4 +1,4 @@
-from math import pi
+from math import pi, log
 
 import jbw
 
@@ -63,7 +63,7 @@ class JBWEnv:
     def reset(self, seed: int = 0):
         config = jbw.SimulatorConfig(
             max_steps_per_movement=1,
-            vision_range=5,
+            vision_range=32,
             allowed_movement_directions=[
                 jbw.ActionPolicy.ALLOWED,
                 jbw.ActionPolicy.DISALLOWED,
@@ -90,6 +90,7 @@ class JBWEnv:
         )
         sim = jbw.Simulator(sim_config=config)
         self.agent = SimpleAgent(sim)
+        return self.agent.vision()
 
     def step(self, action):
         self.agent.do_next_action()
