@@ -20,16 +20,36 @@ class SimpleAgent(jbw.Agent):
 items = []
 items.append(
     jbw.Item(
-        "banana",
-        [1.0, 1.0, 0.0],
-        [1.0, 1.0, 0.0],
-        [0],
-        [0],
+        "JellyBean",
+        [1.64, 0.54, 0.40],
+        [0.82, 0.27, 0.20],
+        [0, 0],
+        [0, 0],
         False,
         0.0,
         intensity_fn=jbw.IntensityFunction.CONSTANT,
-        intensity_fn_args=[-2.0],
-        interaction_fns=[[jbw.InteractionFunction.PIECEWISE_BOX, 40.0, 200.0, 0.0, -40.0]],
+        intensity_fn_args=[log(0.1)],
+        interaction_fns=[
+            [jbw.InteractionFunction.ZERO],
+            [jbw.InteractionFunction.ZERO],
+        ],
+    )
+)
+items.append(
+    jbw.Item(
+        "JellyBean",
+        [0.68, 0.01, 0.99],
+        [0.68, 0.01, 0.99],
+        [0, 0],
+        [0, 0],
+        False,
+        0.0,
+        intensity_fn=jbw.IntensityFunction.CONSTANT,
+        intensity_fn_args=[log(0.1)],
+        interaction_fns=[
+            [jbw.InteractionFunction.ZERO],
+            [jbw.InteractionFunction.ZERO],
+        ],
     )
 )
 
@@ -43,7 +63,7 @@ class JBWEnv:
     def reset(self, seed: int = 0):
         config = jbw.SimulatorConfig(
             max_steps_per_movement=1,
-            vision_range=1,
+            vision_range=5,
             allowed_movement_directions=[
                 jbw.ActionPolicy.ALLOWED,
                 jbw.ActionPolicy.DISALLOWED,
@@ -63,8 +83,8 @@ class JBWEnv:
             agent_color=[0.0, 0.0, 1.0],
             collision_policy=jbw.MovementConflictPolicy.FIRST_COME_FIRST_SERVED,
             agent_field_of_view=2 * pi,
-            decay_param=0.4,
-            diffusion_param=0.14,
+            decay_param=0,
+            diffusion_param=0,
             deleted_item_lifetime=2000,
             seed=seed,
         )
