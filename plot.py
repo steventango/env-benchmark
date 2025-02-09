@@ -21,6 +21,7 @@ def main():
 
     plot_sps(df_agg)
     plot_memory(df)
+    plot_wall_time(df)
 
 
 def load_df(csvs: Iterable[Path], env_mapping: dict):
@@ -33,6 +34,31 @@ def load_df(csvs: Iterable[Path], env_mapping: dict):
         dfs.append(df)
     df = pd.concat(dfs)
     return df
+
+
+def plot_wall_time(df: pd.DataFrame):
+    plt.figure()
+
+    sns.lineplot(data=df, x="step", y="wall_time", hue="env")
+    sns.lineplot(
+        data=df,
+        x="step",
+        y="wall_time",
+        hue="env",
+        alpha=0.4,
+        units="seed",
+        estimator=None,
+        legend=False,
+        errorbar=None,
+    )
+    sns.despine()
+    plt.xlabel("Timestep")
+    plt.ylabel("Wall time (s)")
+    plt.gca().xaxis.set_major_locator(plt.MaxNLocator(5))
+    plt.legend(title=None)
+    plt.tight_layout()
+    plt.savefig("results/benchmark_wall_time.pdf")
+    plt.savefig("results/benchmark_wall_time.jpg")
 
 
 def plot_memory(df: pd.DataFrame):
@@ -53,7 +79,7 @@ def plot_memory(df: pd.DataFrame):
     sns.despine()
     plt.xlabel("Timestep")
     plt.ylabel("Memory (GB)")
-    plt.gca().xaxis.set_major_locator(plt.MaxNLocator(6))
+    plt.gca().xaxis.set_major_locator(plt.MaxNLocator(5))
     plt.legend(title=None)
     plt.tight_layout()
     plt.savefig("results/benchmark_memory.pdf")
