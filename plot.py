@@ -52,6 +52,18 @@ def load_df(csvs: Iterable[Path], env_mapping: dict):
     return df
 
 
+def place_labels(line: matplotlib.lines.Line2D, label: str, x_max: float, y_max: float, x_min: float, y_min: float):
+    xdata = line.get_xdata()[-2:]
+    ydata = line.get_ydata()[-2:]
+    w = x_max - x_min
+    h = y_max - y_min
+    slope = ((ydata[-1] - y_min) / h) / ((xdata[-1] - x_min) / w) if xdata[-1] != x_min else 0
+    if abs(slope) < 1e-2:
+        plt.text(xdata[-1], ydata[-1] + 0.1 * h, label, color=line.get_color(), fontsize=10, va="center", ha="right")
+    else:
+        plt.text(xdata[-1] - 0.1 * w, ydata[-1], label, color=line.get_color(), fontsize=10, va="center", ha="right")
+
+
 def plot_wall_time(df: pd.DataFrame):
     plt.figure(figsize=(3, 2))
 
@@ -78,12 +90,7 @@ def plot_wall_time(df: pd.DataFrame):
     plt.gca().yaxis.set_major_locator(matplotlib.ticker.FixedLocator([0, df["wall_time"].max()]))
 
     for line, label in zip(plt.gca().get_lines(), df["env"].unique()):
-        y = line.get_ydata()[-1]
-        w = df["step"].max() - df["step"].min()
-        h = df["wall_time"].max() - df["wall_time"].min()
-        plt.text(
-            df["step"].max() - 0.1 * w, y + 0.1 * h, label, color=line.get_color(), fontsize=10, va="center", ha="right"
-        )
+        place_labels(line, label, df["step"].max(), df["wall_time"].max(), df["step"].min(), df["wall_time"].min())
 
     plt.tight_layout()
     plt.savefig("results/benchmark_wall_time.pdf")
@@ -114,12 +121,7 @@ def plot_memory(df: pd.DataFrame):
     plt.gca().yaxis.set_major_locator(matplotlib.ticker.FixedLocator([0, df["memory"].max().round()]))
 
     for line, label in zip(plt.gca().get_lines(), df["env"].unique()):
-        y = line.get_ydata()[-1]
-        w = df["step"].max() - df["step"].min()
-        h = df["memory"].max() - df["memory"].min()
-        plt.text(
-            df["step"].max() - 0.1 * w, y + 0.1 * h, label, color=line.get_color(), fontsize=10, va="center", ha="right"
-        )
+        place_labels(line, label, df["step"].max(), df["memory"].max(), df["step"].min(), df["memory"].min())
 
     plt.tight_layout()
     plt.savefig("results/benchmark_memory.pdf")
