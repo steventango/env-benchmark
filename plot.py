@@ -42,13 +42,15 @@ def load_df(csvs: Iterable[Path], env_mapping: dict):
 def plot_wall_time(df: pd.DataFrame):
     plt.figure(figsize=(3, 2))
 
-    sns.lineplot(data=df, x="step", y="wall_time", hue="env", palette=gdm_colors, legend=False)
+    sns.lineplot(
+        data=df, x="step", y="wall_time", hue="env", palette=gdm_colors[: df["env"].nunique()], legend=False
+    )
     sns.lineplot(
         data=df,
         x="step",
         y="wall_time",
         hue="env",
-        palette=gdm_colors,
+        palette=gdm_colors[: df["env"].nunique()],
         alpha=0.4,
         units="seed",
         estimator=None,
@@ -76,13 +78,13 @@ def plot_wall_time(df: pd.DataFrame):
 def plot_memory(df: pd.DataFrame):
     plt.figure(figsize=(3, 2))
 
-    sns.lineplot(data=df, x="step", y="memory", hue="env", palette=gdm_colors, legend=False)
+    sns.lineplot(data=df, x="step", y="memory", hue="env", palette=gdm_colors[: df["env"].nunique()], legend=False)
     sns.lineplot(
         data=df,
         x="step",
         y="memory",
         hue="env",
-        palette=gdm_colors,
+        palette=gdm_colors[: df["env"].nunique()],
         alpha=0.4,
         units="seed",
         estimator=None,
@@ -107,9 +109,9 @@ def plot_memory(df: pd.DataFrame):
     plt.savefig("results/benchmark_memory.jpg")
 
 
-def plot_sps(df_agg: pd.DataFrame):
+def plot_sps(df: pd.DataFrame):
     plt.figure(figsize=(3, 2))
-    sns.barplot(data=df_agg, x="env", y="sps", hue="env", palette=gdm_colors, capsize=0.2)
+    sns.barplot(data=df, x="env", y="sps", hue="env", palette=gdm_colors[: df["env"].nunique()], capsize=0.2)
     sns.despine()
     plt.xlabel("Environment")
     plt.ylabel("Steps per second")
