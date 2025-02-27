@@ -1,11 +1,24 @@
 from pathlib import Path
 from typing import Iterable
 
+import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
 gdm_colors = ["#4285f4", "#ff902a", "#34a853", "#ea4335", "#fbbc04", "#2daeb8"]
+
+
+def metric_formatter_func(x, pos):
+    if x >= 1e6:
+        return f"{x * 1e-6:g}M"
+    elif x >= 1e3:
+        return f"{x * 1e-3:g}K"
+    else:
+        return f"{x:g}"
+
+
+metric_formatter = matplotlib.ticker.FuncFormatter(metric_formatter_func)
 
 
 def main():
@@ -18,7 +31,7 @@ def main():
 
     df_agg = df.groupby(["env", "seed"]).agg({"step": "max", "wall_time": "max", "memory": "max"}).reset_index()
     df_agg["sps"] = df_agg["step"] / df_agg["wall_time"]
-    df_agg = df_agg.groupby("env").agg({"sps": "mean", "memory": "mean"}).reset_index()
+    df_agg = df_agg.groupby("env").agg({"sps": "mean", "memory": "mean", "wall_time": "mean"}).reset_index()
     print(df_agg)
 
     plot_sps(df_agg)
@@ -60,7 +73,9 @@ def plot_wall_time(df: pd.DataFrame):
     sns.despine()
     plt.xlabel("Timestep")
     plt.ylabel("Wall time (s)")
-    plt.gca().ticklabel_format(axis="x", style="sci", scilimits=(0, 0), useMathText=True)
+    plt.gca().xaxis.set_major_formatter(metric_formatter)
+    plt.gca().xaxis.set_major_locator(matplotlib.ticker.FixedLocator([0, df["step"].max()]))
+    plt.gca().yaxis.set_major_locator(matplotlib.ticker.FixedLocator([0, df["wall_time"].max()]))
 
     for line, label in zip(plt.gca().get_lines(), df["env"].unique()):
         y = line.get_ydata()[-1]
@@ -94,7 +109,9 @@ def plot_memory(df: pd.DataFrame):
     sns.despine()
     plt.xlabel("Timestep")
     plt.ylabel("Memory (GB)")
-    plt.gca().ticklabel_format(axis="x", style="sci", scilimits=(0, 0), useMathText=True)
+    plt.gca().xaxis.set_major_formatter(metric_formatter)
+    plt.gca().xaxis.set_major_locator(matplotlib.ticker.FixedLocator([0, df["step"].max()]))
+    plt.gca().yaxis.set_major_locator(matplotlib.ticker.FixedLocator([0, df["memory"].max().round()]))
 
     for line, label in zip(plt.gca().get_lines(), df["env"].unique()):
         y = line.get_ydata()[-1]
