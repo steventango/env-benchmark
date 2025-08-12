@@ -54,7 +54,7 @@ def load_df(csvs: Iterable[Path], env_mapping: dict):
         dfs.append(df)
     df = pd.concat(dfs)
     if "epsilon" in df.columns and df["epsilon"].nunique() > 1:
-        df["env"] += f"\epsilon={df['epsilon']}"
+        df["env"] += "$\epsilon=" + df["epsilon"].astype(str) + "$"
     df = df.sort_values("env")
     return df
 
@@ -65,7 +65,9 @@ def place_labels(line: matplotlib.lines.Line2D, label: str, x_max: float, y_max:
     w = x_max - x_min
     h = y_max - y_min
     slope = ((ydata[-1] - y_min) / h) / ((xdata[-1] - x_min) / w) if xdata[-1] != x_min else 0
-    if abs(slope) < 1e-2:
+    if "$\epsilon" in label:
+        plt.text(xdata[-1] + 0.1 * w, ydata[-1], label, color=line.get_color(), fontsize=10, va="center", ha="left")
+    elif abs(slope) < 1e-2:
         plt.text(xdata[-1], ydata[-1] + 0.1 * h, label, color=line.get_color(), fontsize=10, va="center", ha="right")
     else:
         plt.text(xdata[-1] - 0.1 * w, ydata[-1], label, color=line.get_color(), fontsize=10, va="center", ha="right")
