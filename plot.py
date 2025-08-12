@@ -133,7 +133,7 @@ def plot_sps(df: pd.DataFrame):
     sns.barplot(data=df, x="env", y="sps", hue="env", palette=gdm_colors[: df["env"].nunique()], capsize=0.2)
     sns.despine()
     plt.xlabel("Environment")
-    plt.ylabel("Steps per second")
+    plt.ylabel("Frames per second")
     plt.yscale("log")
     plt.tight_layout()
     plt.savefig("results/benchmark_steps.pdf")
