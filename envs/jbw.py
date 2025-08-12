@@ -7,8 +7,8 @@ class SimpleAgent(jbw.Agent):
     def __init__(self, simulator, load_filepath=None):
         super(SimpleAgent, self).__init__(simulator, load_filepath)
 
-    def do_next_action(self):
-        self.move(action)
+    def do_next_action(self, action):
+        self.move(jbw.direction.Direction(action))
 
     def save(self, filepath):
         pass

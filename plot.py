@@ -1,3 +1,4 @@
+import argparse
 from pathlib import Path
 from typing import Iterable
 
@@ -22,11 +23,15 @@ metric_formatter = matplotlib.ticker.FuncFormatter(metric_formatter_func)
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--result-dir", type=str, default="results")
+    args = parser.parse_args()
     env_mapping = {
-        "jbw": "Jellybean World",
+        "jbw": "",
         "forager": "Forager",
     }
-    csvs = Path("results").rglob("*.csv.gz")
+    results_dir = Path(args.result_dir)
+    csvs = Path(results_dir).glob("*.csv.gz")
     df = load_df(csvs, env_mapping)
 
     df_agg = df.groupby(["env", "seed"]).agg({"step": "max", "wall_time": "max", "memory": "max"}).reset_index()
@@ -34,20 +39,22 @@ def main():
     df_agg = df_agg.groupby("env").agg({"sps": "mean", "memory": "mean", "wall_time": "mean"}).reset_index()
     print(df_agg)
 
-    plot_sps(df_agg)
-    plot_memory(df)
-    plot_wall_time(df)
+    plot_sps(df_agg, results_dir)
+    plot_memory(df, results_dir)
+    plot_wall_time(df, results_dir)
 
 
 def load_df(csvs: Iterable[Path], env_mapping: dict):
     dfs = []
     for csv in csvs:
         df = pd.read_csv(csv)
-        df["env"] = csv.stem.split(".")[0]
+        df["env"] = csv.stem.split("_")[0]
         df["env"] = df["env"].map(env_mapping)
         df["memory"] /= 1e9
         dfs.append(df)
     df = pd.concat(dfs)
+    if "epsilon" in df.columns and df["epsilon"].nunique() > 1:
+        df["env"] += f"\epsilon={df['epsilon']}"
     df = df.sort_values("env")
     return df
 
@@ -64,7 +71,7 @@ def place_labels(line: matplotlib.lines.Line2D, label: str, x_max: float, y_max:
         plt.text(xdata[-1] - 0.1 * w, ydata[-1], label, color=line.get_color(), fontsize=10, va="center", ha="right")
 
 
-def plot_wall_time(df: pd.DataFrame):
+def plot_wall_time(df: pd.DataFrame, results_dir: Path):
     plt.figure(figsize=(3, 2))
 
     sns.lineplot(
@@ -93,11 +100,11 @@ def plot_wall_time(df: pd.DataFrame):
         place_labels(line, label, df["step"].max(), df["wall_time"].max(), df["step"].min(), df["wall_time"].min())
 
     plt.tight_layout()
-    plt.savefig("results/benchmark_wall_time.pdf")
-    plt.savefig("results/benchmark_wall_time.jpg")
+    plt.savefig(results_dir / "benchmark_wall_time.pdf")
+    plt.savefig(results_dir / "benchmark_wall_time.jpg")
 
 
-def plot_memory(df: pd.DataFrame):
+def plot_memory(df: pd.DataFrame, results_dir: Path):
     plt.figure(figsize=(3, 2))
 
     sns.lineplot(data=df, x="step", y="memory", hue="env", palette=gdm_colors[: df["env"].nunique()], legend=False)
@@ -124,11 +131,11 @@ def plot_memory(df: pd.DataFrame):
         place_labels(line, label, df["step"].max(), df["memory"].max(), df["step"].min(), df["memory"].min())
 
     plt.tight_layout()
-    plt.savefig("results/benchmark_memory.pdf")
-    plt.savefig("results/benchmark_memory.jpg")
+    plt.savefig(results_dir / "benchmark_memory.pdf")
+    plt.savefig(results_dir / "benchmark_memory.jpg")
 
 
-def plot_sps(df: pd.DataFrame):
+def plot_sps(df: pd.DataFrame, results_dir: Path):
     plt.figure(figsize=(3, 2))
     sns.barplot(data=df, x="env", y="sps", hue="env", palette=gdm_colors[: df["env"].nunique()], capsize=0.2)
     sns.despine()
@@ -136,8 +143,8 @@ def plot_sps(df: pd.DataFrame):
     plt.ylabel("Steps per second")
     plt.yscale("log")
     plt.tight_layout()
-    plt.savefig("results/benchmark_steps.pdf")
-    plt.savefig("results/benchmark_steps.jpg")
+    plt.savefig(results_dir / "benchmark_steps.pdf")
+    plt.savefig(results_dir / "benchmark_steps.jpg")
 
 
 if __name__ == "__main__":

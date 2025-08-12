@@ -20,8 +20,9 @@ def main():
     parser.add_argument("--subsample", type=int, default=10_000)
     parser.add_argument("--epsilon", type=float, default=0.0)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--result-dir", type=str, default="results/epsilon-up")
     args = parser.parse_args()
-    results_dir = Path("results")
+    results_dir = Path(args.result_dir)
     results_dir.mkdir(exist_ok=True)
 
     length = ceil((args.timesteps) / args.subsample) + 1
@@ -60,10 +61,11 @@ def main():
             "wall_time": wall_time.flatten(),
             "memory": memory.flatten(),
             "seed": np.full(length, args.seed),
+            "epsilon": np.full(length, args.epsilon),
             "step": np.arange(0, args.timesteps + 1, args.subsample),
         }
     )
-    df.to_csv(results_dir / f"{args.env}.{args.seed}.csv.gz", index=False)
+    df.to_csv(results_dir / f"{args.env}_{args.epsilon}_{args.seed}.csv.gz", index=False)
 
 
 if __name__ == "__main__":
