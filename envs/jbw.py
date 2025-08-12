@@ -8,7 +8,7 @@ class SimpleAgent(jbw.Agent):
         super(SimpleAgent, self).__init__(simulator, load_filepath)
 
     def do_next_action(self):
-        self.move(jbw.RelativeDirection.FORWARD)
+        self.move(action)
 
     def save(self, filepath):
         pass
@@ -66,15 +66,15 @@ class JBWEnv:
             vision_range=5,
             allowed_movement_directions=[
                 jbw.ActionPolicy.ALLOWED,
-                jbw.ActionPolicy.DISALLOWED,
-                jbw.ActionPolicy.DISALLOWED,
-                jbw.ActionPolicy.DISALLOWED,
+                jbw.ActionPolicy.ALLOWED,
+                jbw.ActionPolicy.ALLOWED,
+                jbw.ActionPolicy.ALLOWED,
             ],
             allowed_turn_directions=[
                 jbw.ActionPolicy.DISALLOWED,
                 jbw.ActionPolicy.DISALLOWED,
-                jbw.ActionPolicy.ALLOWED,
-                jbw.ActionPolicy.ALLOWED,
+                jbw.ActionPolicy.DISALLOWED,
+                jbw.ActionPolicy.DISALLOWED,
             ],
             no_op_allowed=False,
             patch_size=32,
@@ -92,4 +92,4 @@ class JBWEnv:
         self.agent = SimpleAgent(sim)
 
     def step(self, action):
-        self.agent.do_next_action()
+        self.agent.do_next_action(action)

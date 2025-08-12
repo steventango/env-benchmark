@@ -18,6 +18,7 @@ def main():
     parser.add_argument("--env", type=str, default="jbw")
     parser.add_argument("--timesteps", type=int, default=10_000_000)
     parser.add_argument("--subsample", type=int, default=10_000)
+    parser.add_argument("--epsilon", type=float, default=0.0)
     parser.add_argument("--seed", type=int, default=0)
     args = parser.parse_args()
     results_dir = Path("results")
@@ -32,14 +33,19 @@ def main():
     start = datetime.now()
     env = get_env(args.env)()
     env.reset(seed=args.seed)
+    np.random.seed(args.seed)
     end = datetime.now()
     mem = psutil.virtual_memory()
     memory[0] = mem.used
     total_time += (end - start).total_seconds()
     wall_time[0] = total_time
+    p = np.zeros(4)
+    p[0] = 1 - args.epsilon
+    p += args.epsilon / 4
     for step in tqdm(range(1, args.timesteps + 1)):
+        action = np.random.choice(4, p=p)
         start = datetime.now()
-        env.step(0)
+        env.step(action)
         end = datetime.now()
         total_time += (end - start).total_seconds()
         if step % args.subsample == 0:
