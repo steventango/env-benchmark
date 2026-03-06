@@ -1,10 +1,9 @@
 import argparse
-import gc
-import time
 from datetime import datetime
 from math import ceil
 from pathlib import Path
 
+import jax.numpy as jnp
 import numpy as np
 import pandas as pd
 import psutil
@@ -19,6 +18,8 @@ def main():
     parser.add_argument("--timesteps", type=int, default=10_000_000)
     parser.add_argument("--subsample", type=int, default=10_000)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--scan-steps", type=int, default=1)
+    parser.add_argument("--result-dir", type=str, default="results")
     args = parser.parse_args()
     results_dir = Path("results")
     results_dir.mkdir(exist_ok=True)
@@ -28,25 +29,40 @@ def main():
     memory = np.random.randn(length)
 
     total_time = 0
-    mem_initial = psutil.virtual_memory().used
+    process = psutil.Process()
+    mem_initial = process.memory_info().rss
     start = datetime.now()
     env = get_env(args.env)()
     env.reset(seed=args.seed)
     end = datetime.now()
-    mem = psutil.virtual_memory()
-    memory[0] = mem.used
+    memory[0] = process.memory_info().rss
     total_time += (end - start).total_seconds()
     wall_time[0] = total_time
-    for step in tqdm(range(1, args.timesteps + 1)):
-        start = datetime.now()
-        env.step(0)
-        end = datetime.now()
-        total_time += (end - start).total_seconds()
-        if step % args.subsample == 0:
-            index = step // args.subsample
-            mem = psutil.virtual_memory()
-            memory[index] = mem.used
-            wall_time[index] = total_time
+    use_scan = args.scan_steps > 1 and hasattr(env, "scan_step")
+    step = 0
+    with tqdm(total=args.timesteps) as pbar:
+        while step < args.timesteps:
+            prev_step = step
+            if use_scan:
+                n = min(args.scan_steps, args.timesteps - step, args.subsample)
+                actions = jnp.zeros(n, dtype=jnp.int32)
+                start = datetime.now()
+                env.scan_step(actions)
+                end = datetime.now()
+                step += n
+                pbar.update(n)
+            else:
+                start = datetime.now()
+                env.step(0)
+                end = datetime.now()
+                step += 1
+                pbar.update(1)
+            total_time += (end - start).total_seconds()
+            for s in range(prev_step + 1, step + 1):
+                if s % args.subsample == 0:
+                    index = s // args.subsample
+                    memory[index] = process.memory_info().rss
+                    wall_time[index] = total_time
 
     memory -= mem_initial
     df = pd.DataFrame(

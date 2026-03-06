@@ -8,12 +8,27 @@ import seaborn as sns
 
 gdm_colors = ["#4285f4", "#ff902a", "#34a853", "#ea4335", "#fbbc04", "#2daeb8"]
 
+font_size = 13
+plt.rcParams.update(
+    {
+        "text.usetex": False,  # Don't use LaTeX
+        "font.family": "serif",  # Use a serif font
+        "font.serif": ["Linux Libertine O"],  # Specifically, use Linux Libertine
+        "font.sans-serif": ["Linux Biolinum O"],  # Use Linux Biolinum for sans-serif
+        "mathtext.fontset": "custom",  # Use custom math fonts
+        "mathtext.rm": "Linux Libertine O",  # Roman text in math
+        "mathtext.it": "Linux Libertine O:italic",  # Italic text in math
+        "mathtext.bf": "Linux Libertine O:bold",  # Bold text in math
+        "axes.unicode_minus": False,  # Ensure minus signs are rendered correctly
+        "font.size": font_size,
+    }
+)
 
 def metric_formatter_func(x, pos):
     if x >= 1e6:
-        return f"{x * 1e-6:g}M"
+        return f"{x * 1e-6:g}"
     elif x >= 1e3:
-        return f"{x * 1e-3:g}K"
+        return f"{x * 1e-3:g}"
     else:
         return f"{x:g}"
 
@@ -23,8 +38,9 @@ metric_formatter = matplotlib.ticker.FuncFormatter(metric_formatter_func)
 
 def main():
     env_mapping = {
-        "jbw": "Jellybean World",
+        "jbw": "Jellybean\nWorld",
         "forager": "Forager",
+        "foragax": "Foragax",
     }
     csvs = Path("results").rglob("*.csv.gz")
     df = load_df(csvs, env_mapping)
@@ -32,6 +48,8 @@ def main():
     df_agg = df.groupby(["env", "seed"]).agg({"step": "max", "wall_time": "max", "memory": "max"}).reset_index()
     df_agg["sps"] = df_agg["step"] / df_agg["wall_time"]
     df_agg = df_agg.groupby("env").agg({"sps": "mean", "memory": "mean", "wall_time": "mean"}).reset_index()
+    df_agg = df_agg.sort_values("sps", ascending=False)
+    df = df.merge(df_agg[["env", "sps"]], on="env").sort_values("sps", ascending=False).drop(columns="sps")
     print(df_agg)
 
     plot_sps(df_agg)
@@ -59,9 +77,9 @@ def place_labels(line: matplotlib.lines.Line2D, label: str, x_max: float, y_max:
     h = y_max - y_min
     slope = ((ydata[-1] - y_min) / h) / ((xdata[-1] - x_min) / w) if xdata[-1] != x_min else 0
     if abs(slope) < 1e-2:
-        plt.text(xdata[-1], ydata[-1] + 0.1 * h, label, color=line.get_color(), fontsize=10, va="center", ha="right")
+        plt.text(xdata[-1], ydata[-1] + 0.1 * h, label, color=line.get_color(), fontsize=font_size, va="center", ha="right")
     else:
-        plt.text(xdata[-1] - 0.1 * w, ydata[-1], label, color=line.get_color(), fontsize=10, va="center", ha="right")
+        plt.text(xdata[-1] - 0.1 * w, ydata[-1], label, color=line.get_color(), fontsize=font_size, va="center", ha="right")
 
 
 def plot_wall_time(df: pd.DataFrame):
@@ -83,7 +101,7 @@ def plot_wall_time(df: pd.DataFrame):
         errorbar=None,
     )
     sns.despine()
-    plt.xlabel("Timestep")
+    plt.xlabel("Time steps ($\\times 10^6$)")
     plt.ylabel("Wall time (s)")
     plt.gca().xaxis.set_major_formatter(metric_formatter)
     plt.gca().xaxis.set_major_locator(matplotlib.ticker.FixedLocator([0, df["step"].max()]))
@@ -93,8 +111,8 @@ def plot_wall_time(df: pd.DataFrame):
         place_labels(line, label, df["step"].max(), df["wall_time"].max(), df["step"].min(), df["wall_time"].min())
 
     plt.tight_layout()
-    plt.savefig("results/benchmark_wall_time.pdf")
-    plt.savefig("results/benchmark_wall_time.jpg")
+    plt.savefig("results/benchmark_wall_time.pdf", bbox_inches="tight", pad_inches=0)
+    plt.savefig("results/benchmark_wall_time.jpg", bbox_inches="tight", pad_inches=0)
 
 
 def plot_memory(df: pd.DataFrame):
@@ -114,18 +132,20 @@ def plot_memory(df: pd.DataFrame):
         errorbar=None,
     )
     sns.despine()
-    plt.xlabel("Timestep")
+    plt.xlabel("Time steps ($\\times 10^6$)")
     plt.ylabel("Memory (GB)")
     plt.gca().xaxis.set_major_formatter(metric_formatter)
     plt.gca().xaxis.set_major_locator(matplotlib.ticker.FixedLocator([0, df["step"].max()]))
-    plt.gca().yaxis.set_major_locator(matplotlib.ticker.FixedLocator([0, df["memory"].max().round()]))
+    plt.gca().yaxis.set_major_locator(matplotlib.ticker.FixedLocator([1, df["memory"].max().round()]))
+    plt.gca().yaxis.set_minor_locator(matplotlib.ticker.FixedLocator([0]))
+    plt.ylim(bottom=-4)
 
     for line, label in zip(plt.gca().get_lines(), df["env"].unique()):
         place_labels(line, label, df["step"].max(), df["memory"].max(), df["step"].min(), df["memory"].min())
 
     plt.tight_layout()
-    plt.savefig("results/benchmark_memory.pdf")
-    plt.savefig("results/benchmark_memory.jpg")
+    plt.savefig("results/benchmark_memory.pdf", bbox_inches="tight", pad_inches=0)
+    plt.savefig("results/benchmark_memory.jpg", bbox_inches="tight", pad_inches=0)
 
 
 def plot_sps(df: pd.DataFrame):
@@ -133,11 +153,11 @@ def plot_sps(df: pd.DataFrame):
     sns.barplot(data=df, x="env", y="sps", hue="env", palette=gdm_colors[: df["env"].nunique()], capsize=0.2)
     sns.despine()
     plt.xlabel("Environment")
-    plt.ylabel("Frames per second")
+    plt.ylabel("FPS")
     plt.yscale("log")
     plt.tight_layout()
-    plt.savefig("results/benchmark_steps.pdf")
-    plt.savefig("results/benchmark_steps.jpg")
+    plt.savefig("results/benchmark_steps.pdf", bbox_inches="tight", pad_inches=0)
+    plt.savefig("results/benchmark_steps.jpg", bbox_inches="tight", pad_inches=0)
 
 
 if __name__ == "__main__":
